@@ -3,7 +3,7 @@ Leijure
 
 This is a collection of utilities written in Clojure, or related to using Clojure.
 
-So far, only two utilities are available:
+So far, only three utilities are available:
 
   * [com.google.leijure.LoadClojure](LoadClojure/)
     a trivial Java class to (dynamically) load Clojure and evaluate code with it.

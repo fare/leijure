@@ -5,6 +5,7 @@
 package com.google.leijure;
 
 import java.io.File;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -200,7 +201,7 @@ public class LoadClojure {
        and return the last value.
 
        Note that if you want to print something, you'll have to do it yourself,
-       with e.g. (println foo) — it's not very useful to use the Java printer,
+       with e.g. (println foo) --- it's not very useful to use the Java printer,
        too much pain to get to the clojure printer, and even worse to make it
        configurable so that nothing's printed when not desired.
        (And we shall not afford the use of a real command-line parsing library

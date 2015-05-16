@@ -16,7 +16,7 @@
 
   <name>DynamicScope</name>
   <description>Dynamic Scope for Java</description>
-  <!-- Not available yet <url>http://github.com/google/dynamic-scope</url> -->
+  <url>http://github.com/qitab/leijure</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

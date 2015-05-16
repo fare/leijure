@@ -16,7 +16,7 @@
 
   <name>LoadClojure</name>
   <description>Dynamically loading Clojure and running Clojure code</description>
-  <!-- Not available yet <url>http://github.com/google/dynamic-scope</url> -->
+  <url>http://github.com/qitab/leijure</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
