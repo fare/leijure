@@ -6,15 +6,15 @@
 ;; (inheriting this behavior or lack thereof from java.io.LineNumberingReader).
 ;; If you care about tab width, use this delta-position library instead.
 ;;
-;; A δposition is a map representing how a given string affects the position.
-;; Importantly, combining two δposition is associative
+;; A delta-position is a map representing how a given string affects the position.
+;; Importantly, combining two delta-position is associative
 ;; — it's not merely a position that you have to compute from the beginning
 ;; of the file, but a delta that you can compute between arbitrary points.
 ;;
 ;; Thus, if you want fast random access to the line and column
 ;; information from a random byte or character position in your file,
 ;; you can divide your file in chunks of strings,
-;; compute δposition for each chunk in parallel,
+;; compute delta-position for each chunk in parallel,
 ;; and build a tree index that makes it easy to
 ;; compute the position of a random character or byte.
 ;; Of course, if you're using a variable length encoding,
@@ -51,45 +51,45 @@
       (.encode (java.nio.CharBuffer/wrap (char-array [char])))
       (.limit)))
 
-;; A δposition is a difference in position from a block of text.
-(def null-δposition
+;; A delta-position is a difference in position from a block of text.
+(def null-delta-position
   {:byte 0 :char 0 :line 0 :column 0 :tab-lead nil
    :starts-with-newline? false :ends-with-return? false })
 
-(defn %normal-char-δposition [length]
+(defn %normal-char-delta-position [length]
   {:byte length :char 1 :line 0 :column 1 :tab-lead nil
    :starts-with-newline? false :ends-with-return? false })
 
-(def %normal-char-δposition-vec
-  (into [] (for [i (range 1 7)] (%normal-char-δposition i))))
+(def %normal-char-delta-position-vec
+  (into [] (for [i (range 1 7)] (%normal-char-delta-position i))))
 
-(def %normal-char-δposition-1
-  (%normal-char-δposition-vec 0))
+(def %normal-char-delta-position-1
+  (%normal-char-delta-position-vec 0))
 
-(defn normal-char-δposition
-  ([l] (%normal-char-δposition-vec (dec l)))
-  ([] %normal-char-δposition-1))
+(defn normal-char-delta-position
+  ([l] (%normal-char-delta-position-vec (dec l)))
+  ([] %normal-char-delta-position-1))
 
-(def return-δposition
+(def return-delta-position
   {:byte 1 :char 1 :line 1 :column 0 :tab-lead nil
    :starts-with-newline? false :ends-with-return? true})
 
-(def newline-δposition
+(def newline-delta-position
   {:byte 1 :char 1 :line 1 :column 0 :tab-lead nil
    :starts-with-newline? true :ends-with-return? false})
 
-(def formfeed-δposition
+(def formfeed-delta-position
   ;; hack: formfeed has zero width.
   ;; Maybe add state so it resets the column?
   {:byte 1 :char 1 :line 0 :column 0 :tab-lead nil
    :starts-with-newline? true :ends-with-return? false})
 
-(def tab-δposition
+(def tab-delta-position
   {:byte 1 :char 1 :line 0 :column 0 :tab-lead 0
    :starts-with-newline? false :ends-with-return? false})
 
-(defn combine-δposition
-  ([] null-δposition)
+(defn combine-delta-position
+  ([] null-delta-position)
   ([x] x)
   ([x y] (let [{xb :byte xc :char xln :line xco :column xt :tab-lead
                 xn :starts-with-newline? xr :ends-with-return?} x
@@ -110,33 +110,33 @@
             :column column
             :starts-with-newline? (if (zero? xc) yn xn)
             :ends-with-return? (if (zero? yc) xr yr)}))
-  ([x y z & t] (reduce combine-δposition (list* x y z t))))
+  ([x y z & t] (reduce combine-delta-position (list* x y z t))))
 
-(defn char-δposition
+(defn char-delta-position
   ([char encoder]
      (case char
-       \return return-δposition
-       \newline newline-δposition
-       \formfeed formfeed-δposition
-       \tab tab-δposition
-       nil null-δposition
+       \return return-delta-position
+       \newline newline-delta-position
+       \formfeed formfeed-delta-position
+       \tab tab-delta-position
+       nil null-delta-position
        (if (and (= encoder utf8-encoder) (< (int char) 128))
-         %normal-char-δposition-1
-         (normal-char-δposition char encoder))))
+         %normal-char-delta-position-1
+         (normal-char-delta-position char encoder))))
   ([char]
-     (char-δposition char utf8-encoder)))
+     (char-delta-position char utf8-encoder)))
 
-(defn inc-δposition
-  ([δposition char encoder]
-     (combine-δposition δposition (char-δposition char encoder)))
-  ([δposition char]
-     (inc-δposition δposition char utf8-encoder)))
+(defn inc-delta-position
+  ([delta-position char encoder]
+     (combine-delta-position delta-position (char-delta-position char encoder)))
+  ([delta-position char]
+     (inc-delta-position delta-position char utf8-encoder)))
 
-(defn seq-δposition
+(defn seq-delta-position
   ([s encoder]
-     (reduce #(inc-δposition % %2 encoder) null-δposition s))
+     (reduce #(inc-delta-position % %2 encoder) null-delta-position s))
   ([s]
-     (seq-δposition s utf8-encoder)))
+     (seq-delta-position s utf8-encoder)))
 
 (defn to-char [c] (if (= c -1) nil (char c)))
 (defn read-char [stream] (to-char (.read stream)))
@@ -147,12 +147,12 @@
    (instance? String s) (java.io.StringReader. s)
    :else (throw (Exception. (format "can't turn %s into a Reader" s)))))
 
-(defn- %positioned-stream [reader δposition encoder line-offset column-offset]
+(defn- %positioned-stream [reader delta-position encoder line-offset column-offset]
   (lazy-seq
    (if-let [char (read-char reader)]
-     (cons [char (+ line-offset (:line δposition)) (+ column-offset (:column δposition))]
+     (cons [char (+ line-offset (:line delta-position)) (+ column-offset (:column delta-position))]
            (%positioned-stream
-            reader (inc-δposition δposition char encoder) encoder line-offset column-offset)))))
+            reader (inc-delta-position delta-position char encoder) encoder line-offset column-offset)))))
 
 (defn positioned-stream
   ([input]
@@ -160,7 +160,7 @@
   ([input options]
      (%positioned-stream
       (ensure-reader input)
-      (or (:δposition options) null-δposition)
+      (or (:delta-position options) null-delta-position)
       (or (:encoder options) utf8-encoder)
       (or (:line-offset options) 0)
       (or (:column-offset options) 0))))
