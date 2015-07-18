@@ -12,6 +12,6 @@
 hs_err_pid*
 
 # Some build artifacts
-.lein-repl-history
+.lein*
 delta-position/pom.xml
 */target/
