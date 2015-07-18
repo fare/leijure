@@ -20,7 +20,7 @@ import org.junit.runners.JUnit4;
  * Trivial class to load and use Clojure in a Java application that doesn't include it by default.
  */
 @RunWith(JUnit4.class)
-public class LoadClojureTest extends TestCase {
+public class LoadClojureTest {
     @Test
     public void testLoadClojure () throws Exception {
         LoadClojure lc = new LoadClojure();
